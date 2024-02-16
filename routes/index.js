@@ -43,7 +43,15 @@ router.post('/login', (req, res) => {
 
     // Check if the password is correct
      const user = existingUser.rows[0];
-     
+     if (user.password !== password) {
+      return res.status(400).json({error: 'Incorrect password, please try again.'});
+     }
+
+     // If the password is correct respond with a success message
+     res.redirect('./account');
+  } catch (err) {
+    console.error('There has been an error:', err.message);
+    res.status(500).json({error:'An error occurred while logging in'});
   }
 });
 
