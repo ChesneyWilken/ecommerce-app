@@ -29,7 +29,7 @@ router.post('/sign-up', async (req, res) => {
 });
 
 // Existing user login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const {email, password} = req.body;
 
   try{
