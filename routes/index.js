@@ -16,15 +16,20 @@ router.post('/sign-up', async (req, res) => {
     // Check if the user already exists
     const existingUser = await Pool.query('SELECT * FROM customers WHERE email = $1', [email]);
 
+    if(existingUser.rows.length > 0) {
+      return res.status(400).json({error: 'A user with this email already exists. Please login.'});
+    }
+
     const newUser = await Pool.query(
       'INSERT INTO customers (first_name, last_name, email, password, phone_number) VALUES (($1, $2, $3, $4, $5) RETURNING *)',
       [first_name, last_name, email, password, phone_number]
     );
 
     res.status(201).json({ message: 'Account successfully created', user: newUser.rows[0] });
+
   } catch (err) {
     console.error(err.message);
-    res.status(500).json('An error occurred while registering the user error');
+    res.status(500).json('An error occurred while registering the user');
   }
 });
 
@@ -55,7 +60,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
-//
+// User endpoints
+
+// Get all users
+
+
+// Get information about the current user (logged in)
+
+
+// Update information about the current user (logged in)
 
 module.exports = router;
 
