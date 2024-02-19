@@ -4,6 +4,13 @@ const router = express.Router();
 const {Pool, Client} = require('pg');
 
 
+// Parse the DATABASE_CONNECTION environment variable as a JSON object
+const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
+
+// Create a new pool using the parsed database connection configuration
+const pool = new Pool(dbConfig);
+
+
 router.get('/', (req, res) => {
   res.send('Index')
 });
@@ -16,13 +23,13 @@ router.post('/sign-up', async (req, res) => {
   //Insert new customer information into the database
   try {
     // Check if the user already exists
-    const existingUser = await Pool.query('SELECT * FROM customers WHERE email = $1', [email]);
+    const existingUser = await pool.query('SELECT * FROM customers WHERE email = $1', [email]);
 
     if(existingUser.rows.length > 0) {
       return res.status(400).json({error: 'A user with this email already exists. Please login.'});
     }
 
-    const newUser = await Pool.query(
+    const newUser = await pool.query(
       'INSERT INTO customers (first_name, last_name, email, password, phone_number) VALUES (($1, $2, $3, $4, $5) RETURNING *)',
       [first_name, last_name, email, password, phone_number]
     );
@@ -41,7 +48,7 @@ router.post('/login', async (req, res) => {
 
   try{
     // Check if the user exists
-    const existingUser = await Pool.query('SELECT * FROM customers WHERE email = $1', [email]);
+    const existingUser = await pool.query('SELECT * FROM customer WHERE email = $1', [email]);
 
     // If the user doesn't exist respond with an error
     if(existingUser.rows.length === 0){
@@ -67,8 +74,9 @@ router.post('/login', async (req, res) => {
 // Get all users. This should be restricted maybe a middleware function that checks if the user has the correct permissions. Adding this is currently our of the scope of this project.
 
 router.get('/users', async (req, res) => {
+  
   try {
-    const allUsers = await Pool.query('SELECT * FROM customers');
+    const allUsers = await pool.query('SELECT * FROM ecoms.customer');
     res.status(200).json(allUsers.rows);
 
   } catch (err) {
