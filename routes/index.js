@@ -1,6 +1,8 @@
 const express = require('express');
+const app = express();
 const router = express.Router();
 const {Pool, Client} = require('pg');
+
 
 router.get('/', (req, res) => {
   res.send('Index')
@@ -9,7 +11,7 @@ router.get('/', (req, res) => {
 
 // New user sign up
 router.post('/sign-up', async (req, res) => {
-  const {first_name, last_name, email, password, phone_number} =req.body;
+  const {first_name, last_name, email, password, phone_number} = req.body;
 
   //Insert new customer information into the database
   try {
@@ -62,10 +64,30 @@ router.post('/login', async (req, res) => {
 
 // User endpoints
 
-// Get all users
+// Get all users. This should be restricted maybe a middleware function that checks if the user has the correct permissions. Adding this is currently our of the scope of this project.
 
+router.get('/users', async (req, res) => {
+  try {
+    const allUsers = await Pool.query('SELECT * FROM customers');
+    res.status(200).json(allUsers.rows);
+
+  } catch (err) {
+    console.error('There has been an error:', err.message);
+    res.status(500).json({error:'An error occurred while fetching users'});
+  }
+});
 
 // Get information about the current user (logged in)
+router.get('/users/my-account', async (req, res) => {
+
+  try {
+
+  } catch(err) {
+    console.error('There has been an error:', err.message);
+    res.status(500).json({error:'An error occurred while fetching user information'});   
+  }
+});
+
 
 
 // Update information about the current user (logged in)
