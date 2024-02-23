@@ -2,14 +2,31 @@ const express = require('express');
 const app = express();
 const router = express.Router();
 const {Pool, Client} = require('pg');
-
-
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
 // Create a new pool using the parsed database connection configuration
 const pool = new Pool(dbConfig);
 
+// Middleware for session authentication
+app.use(
+  session({
+    store: new pgSession({
+      pool: pool, // connection pool
+      tableName: "user_sessions", // session table name
+      schemaName: "ecoms" //custom schema name
+    }),
+    secret: process.env.SESSION_SECRET,
+    cookie: { maxAge: 1000 * 60 * 60 * 24, secure: true, sameSite: 'none' },
+    resave: false,
+    saveUninitialized: false,
+    store,
+  })
+);
+
+//Get Index
 
 router.get('/', (req, res) => {
   res.send('Index')
@@ -23,7 +40,7 @@ router.post('/sign-up', async (req, res) => {
   //Insert new customer information into the database
   try {
     // Check if the user already exists
-    const existingUser = await pool.query('SELECT * FROM customers WHERE email = $1', [email]);
+    const existingUser = await pool.query('SELECT * FROM ecoms.customers WHERE email = $1', [email]);
 
     if(existingUser.rows.length > 0) {
       return res.status(400).json({error: 'A user with this email already exists. Please login.'});
@@ -48,7 +65,7 @@ router.post('/login', async (req, res) => {
 
   try{
     // Check if the user exists
-    const existingUser = await pool.query('SELECT * FROM customer WHERE email = $1', [email]);
+    const existingUser = await pool.query('SELECT * FROM ecoms.customer WHERE email = $1 AND password = $2', [email, password]);
 
     // If the user doesn't exist respond with an error
     if(existingUser.rows.length === 0){
@@ -89,6 +106,10 @@ router.get('/users', async (req, res) => {
 router.get('/users/my-account', async (req, res) => {
 
   try {
+     const user = await pool.query('SELECT * FROM ecoms.customer WHERE email, password = $1, $2', [user.email, user.password]);
+
+    // check if user authenticated and return data
+    
 
   } catch(err) {
     console.error('There has been an error:', err.message);
