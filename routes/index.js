@@ -47,17 +47,22 @@ router.post('/sign-up', async (req, res) => {
     }
 
     const newUser = await pool.query(
-      'INSERT INTO customers (first_name, last_name, email, password, phone_number) VALUES (($1, $2, $3, $4, $5) RETURNING *)',
+      'INSERT INTO customers (first_name, last_name, email, password, phone_number) VALUES (($1, $2, $3, $4, $5) RETURNING *',
       [first_name, last_name, email, password, phone_number]
     );
 
     res.status(201).json({ message: 'Account successfully created', user: newUser.rows[0] });
+
+    //Redirect to login
+    res.redirect('/login');
+
 
   } catch (err) {
     console.error(err.message);
     res.status(500).json('An error occurred while registering the user');
   }
 });
+
 
 // Existing user login
 router.post('/login', async (req, res) => {
@@ -79,7 +84,21 @@ router.post('/login', async (req, res) => {
      }
 
      // If the password is correct respond with a success message
-     res.redirect('./account');
+     if(user.password === password) {
+      // Attach an authenticated property to the session
+      req.session.authenticated = true;
+      // Attach the user object to the session
+      req.session.user = {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name
+      }
+
+      res.status(201).json({ message: 'Login successful'});
+      res.redirect('./users/my-account');
+     }
+
+    
   } catch (err) {
     console.error('There has been an error:', err.message);
     res.status(500).json({error:'An error occurred while logging in'});
@@ -106,10 +125,22 @@ router.get('/users', async (req, res) => {
 router.get('/users/my-account', async (req, res) => {
 
   try {
-     const user = await pool.query('SELECT * FROM ecoms.customer WHERE email, password = $1, $2', [user.email, user.password]);
+    // Check if the user is authenticated
+    if(!req.session.authenticated) {
+      return res.status(401).json({error: 'Unauthorized'});
+    }
 
-    // check if user authenticated and return data
+    // Get the user information
+    const userId = req.session.user.id;
+    const user = await pool.query('SELECT * FROM ecoms.customer WHERE id = $1', [userId]);
+
+    // Check if the user exists
+    if(user.rows.length === 0) {
+      return res.status(404).json({error: 'User not found'});
+    }
     
+    // Return user data, this could be expanded to include order information
+    res.status(200).json(user.rows[0]);
 
   } catch(err) {
     console.error('There has been an error:', err.message);
@@ -120,6 +151,43 @@ router.get('/users/my-account', async (req, res) => {
 
 
 // Update information about the current user (logged in)
+router.post('/users/my-account', async (req, res) => {
+
+  try {
+    // Check if the user is authenticated
+    if(!req.session.authenticated) {
+      return res.status(401).json({error: 'Unauthorized'});
+    }
+
+    // Retrieve the user email from session
+    const userId = req.session.user.id;
+
+    // Extract the user information from the request body
+    const {first_name, last_name, email, password, phone_number} = req.body;
+
+    // Check if the user exists
+    const existingUser = await pool.query('SELECT * FROM ecoms.customer WHERE id = $1', [userId]);
+
+    if(existingUser.rows.length === 0) {
+      return res.status(404).json({error: 'User not found'});
+    }
+
+    // Update the user information
+    const updateUserQuery = 
+      `UPDATE ecoms.customer 
+      SET first_name = $1, last_name = $2, email = $3, password = $4, phone_number = $5 
+      WHERE id = $6
+      RETURNING *`;  
+    const updatedUser = await pool.query(updateUserQuery, [first_name, last_name, email, password, phone_number, userId]);
+
+
+  } catch(err) {
+    console.log('There has been an error:', err.message);
+    res.status(500).json({error:'An error occurred while updating user information'});
+  }
+
+});
+
 
 module.exports = router;
 
