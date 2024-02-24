@@ -3,7 +3,7 @@ const app = express();
 const router = express.Router();
 const {Pool, Client} = require('pg');
 const session = require('express-session');
-const pgSession = require('connect-pg-simple')
+const pgSession = require('connect-pg-simple')(session);
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
@@ -21,8 +21,7 @@ app.use(
     secret: process.env.SESSION_SECRET,
     cookie: { maxAge: 1000 * 60 * 60 * 24, secure: true, sameSite: 'none' },
     resave: false,
-    saveUninitialized: false,
-    store,
+    saveUninitialized: false
   })
 );
 
@@ -69,16 +68,16 @@ router.post('/login', async (req, res) => {
   const {email, password} = req.body;
 
   try{
-    // Check if the user exists
-    const existingUser = await pool.query('SELECT * FROM ecoms.customer WHERE email = $1 AND password = $2', [email, password]);
+    // Get user information
+    const existingUser = await pool.query('SELECT * FROM ecoms.customer WHERE email = $1', [email]);
 
     // If the user doesn't exist respond with an error
-    if(existingUser.rows.length === 0){
+    const user = existingUser.rows[0];
+    if(user.email !== email) {
       return res.status(400).json({error: 'User does not exist. Please create an account.'});
     }
 
     // Check if the password is correct
-     const user = existingUser.rows[0];
      if (user.password !== password) {
       return res.status(400).json({error: 'Incorrect password, please try again.'});
      }
@@ -112,7 +111,7 @@ router.post('/login', async (req, res) => {
 router.get('/users', async (req, res) => {
   
   try {
-    const allUsers = await pool.query('SELECT * FROM ecoms.customer');
+    const allUsers = await pool.query('SELECT customer_id, first_name, last_name, email, address, phone_number FROM ecoms.customer');
     res.status(200).json(allUsers.rows);
 
   } catch (err) {
@@ -151,17 +150,17 @@ router.get('/users/my-account', async (req, res) => {
 
 
 // Update information about the current user (logged in)
-router.post('/users/my-account', async (req, res) => {
+router.put('/users/my-account', async (req, res) => {
 
   try {
     // Check if the user is authenticated
     if(!req.session.authenticated) {
-      return res.status(401).json({error: 'Unauthorized'});
+      return res.status(401).json({error: 'Unauthorized request, please login and try again'});
     }
 
-    // Retrieve the user email from session
+    // Retrieve the user id from session
     const userId = req.session.user.id;
-
+    
     // Extract the user information from the request body
     const {first_name, last_name, email, password, phone_number} = req.body;
 
@@ -179,7 +178,7 @@ router.post('/users/my-account', async (req, res) => {
       WHERE id = $6
       RETURNING *`;  
     const updatedUser = await pool.query(updateUserQuery, [first_name, last_name, email, password, phone_number, userId]);
-
+    res.status(200).send('User successfully updated');
 
   } catch(err) {
     console.log('There has been an error:', err.message);
