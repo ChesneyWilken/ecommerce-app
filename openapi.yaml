@@ -1,0 +1,651 @@
+openapi: 3.0.3
+info:
+  title: Ecommerce API
+  version: 1.0.0
+  description: >-
+    A basic API for preforming CRUD operations relating to ecommerce orders,
+    products and users
+paths:
+  /sign-up:
+    summary: New user sign up form
+    description: Allows database to gather all required information to create a new user
+    post:
+      summary: Creates a new user
+      description: Uses the POST operation to create a new user.
+      operationId: sign-up
+      requestBody:
+        description: A new customer object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              examples:
+                User account successfully created:
+                  value: |-
+                    {
+                      "message": "Account successfully created",
+                      "user": {
+                        "id": 123,
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john@example.com",
+                        "phone_number": "1234567890"
+                      }
+                    }
+        '400':
+          description: Failed to create account, user already exists
+          content:
+            application/json:
+              examples:
+                Unsuccessful, user already exists:
+                  value: |-
+                    {
+                     "error": "A user with this email already exists"
+                    }
+        '500':
+          description: >-
+            Failed to create account, an error occurred while registering the
+            user
+          content:
+            application/json:
+              examples:
+                Failed to create account, An error occurred while registering the user:
+                  value: |-
+                    {
+                     "error": "An error occurred while registering the user"
+                    }
+        default:
+          description: Default success response
+      tags:
+        - Customer
+  /login:
+    summary: A login for existing users
+    post:
+      summary: Allows existing users to login to their account
+      description: Example responses for the existing customer login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email of the user
+                password:
+                  type: string
+                  description: The password of the user
+      responses:
+        '201':
+          description: User login successful
+          content:
+            application/json:
+              examples:
+                Login successful:
+                  value: |-
+                    {
+                      "message": "Login successful",
+                      "redirect": "/users/my-account"
+                    }
+        '401':
+          description: User password incorrect
+          content:
+            application/json:
+              examples:
+                User password incorrect:
+                  value: |-
+                    {
+                     "error": "Incorrect password, please try again."
+                    }
+        '404':
+          description: User with input email address not found
+          content:
+            application/json:
+              examples:
+                User not found:
+                  value: >-
+                    {
+
+                    "error": "A user with this email does not exist. Please
+                    create an account."
+
+                    }
+        '500':
+          description: An error occurred, failed to login user
+          content:
+            application/json:
+              examples:
+                Failed to login:
+                  value: |-
+                    {
+                     "error": "Failed to login"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Customer
+  /users:
+    summary: Returns a list of all users in the database
+    description: >-
+      This is for users of the API and only authenticated and authorized logins
+      will be able to see this data.
+    get:
+      summary: Returns a list of all users
+      description: >-
+        This is for users of the API and only authenticated and authorized
+        logins will be able to see this data.
+      operationId: users
+      responses:
+        '201':
+          description: Successfully retreived all user data
+          content:
+            application/json:
+              examples:
+                Successfully, retrieved all user data:
+                  value: |
+                    [
+                      {
+                        "customer_id": 1,
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "johndoe@example.com",
+                        "address": "123 Main St, Anytown, USA",
+                        "phone_number": "555-123-4567"
+                      },
+                      {
+                        "customer_id": 2,
+                        "first_name": "Jane",
+                        "last_name": "Smith",
+                        "email": "janesmith@example.com",
+                        "address": "456 Elm St, Othertown, USA",
+                        "phone_number": "555-987-6543"
+                      }
+                    ]
+        '500':
+          description: There has been an error retrieving user data
+          content:
+            application/json:
+              examples:
+                'There has been an error retrieving user data ':
+                  value: |-
+                    {
+                     "error": "There has been an error retrieving user data"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Customer
+  /users/my-account:
+    summary: Returns information about the user currently logged in
+    description: >-
+      Returns information about the user currently logged in. This is using a
+      scoped endpoint. A non-scoped equivalent would be /users/{id} 
+    get:
+      summary: Returns information about the currently logged in user
+      description: ''
+      operationId: getUser
+      responses:
+        '200':
+          description: Account data successfully retrieved for currently logged in user
+          content:
+            application/json:
+              examples:
+                Account data successfully retrieved for currently logged in user:
+                  value: |-
+                    [
+                     { 
+                       "customer_id":1,
+                       "first_name":"John",
+                       "last_name":"Doe",
+                       "email":"johndoe@example.com",
+                       "address":"123 Main St, Anytown, USA",
+                       "phone_number":"555-123-4567"
+                      }
+                    ]
+        '404':
+          description: User not found
+          content:
+            application/json:
+              examples:
+                User not found:
+                  value: |-
+                    {
+                     "error": "User not found"
+                    }
+        '500':
+          description: Server error, user data count not be retrieved
+          content:
+            application/json:
+              examples:
+                Server error, user data count not be retrieved:
+                  value: |-
+                    {
+                     "error": "Server error, user data count not be retrieved"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Customer
+    put:
+      summary: Updates the currently logged in user
+      description: ''
+      operationId: updateUser
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              examples:
+                User information successfully updated:
+                  value: |-
+                    {
+                     "message": "Update Successful"
+                    }
+        '401':
+          description: Unauthorized request
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                     "error": "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: User not found
+          content:
+            application/json:
+              examples:
+                User not found:
+                  value: |-
+                    {
+                     "error": "User not found"
+                    }
+        '500':
+          description: Server error
+          content:
+            application/json:
+              examples:
+                Server error, failed to update user information:
+                  value: |-
+                    {
+                     "error": "Server error, failed to update user information"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Customer
+  /users/{userId}:
+    summary: Get specific user by their ID
+    description: Get specific user by their ID
+    get:
+      summary: Get a specific user by their ID
+      description: ''
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          description: The id of the order.
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successfully retrieved user data matching {id}
+          content:
+            application/json:
+              examples:
+                Successfully retrieved user data matching {id}:
+                  value: |-
+                    [
+                     { "customer_id": 1,
+                       "first_name": "John",
+                       "last_name": "Doe",
+                       "email": "johndoe@example.com",
+                       "address": "123 Main St, Anytown, USA",
+                       "phone_number": "555-123-4567"
+                      }
+                    ]
+        '404':
+          description: User with {userId} not found
+          content:
+            application/json:
+              examples:
+                User not found:
+                  value: |-
+                   {
+                     "error": "User ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |-
+                    {
+                     "error": "User ID not found"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Customer
+    delete:
+      summary: Delete account information associated with the user ID
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+            description: The ID of the user account to delete.
+      description: Delete account information associated with the user ID
+      operationId: deleteUserById
+      responses:
+        '204':
+          description: User account successfully deleted 
+          content:
+            application/json:
+              examples:
+                User account successfully deleted:
+                  value: |-
+                    {
+                     "message": "User account successfully deleted"
+                    }
+        '404':
+          description: User with {userId} not found
+          content:
+            application/json:
+              examples:
+                User ID not found:
+                  value: |-
+                    {
+                     "error": "User ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |-
+                    {
+                     "error": "Internal server error, try again later"
+                    } 
+        default:
+          description: Default error sample response
+      tags:
+        - Customer
+  /products:
+    summary: Get all products by category
+    description: >-
+      Get all products in a category can also be used with url queries to get
+      more specific results
+    get:
+      summary: Get all products by category
+      description: Retrieve a list of products filtered by category
+      parameters:
+        - name: category
+          in: query
+          description: The ID of the category to filter products by
+          required: true
+          schema:
+            type: integer
+      operationId: getProducts
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - Product
+  /products/{productId}:
+    summary: Get a product by ID
+    description: Gets a single product by it's ID
+    get:
+      summary: Get a product by ID
+      description: Get a single product by ID
+      operationId: getProductById
+      parameters:
+        - name: productId
+          in: path
+          description: The id of the product.
+          required: true
+          schema:
+            type: integer
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - Product
+  /newProduct:
+    summary: Posts new product data
+    description: Post request for product creation
+    post:
+      summary: Creates a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      description: POST request allows for product creation
+      operationId: postProduct
+      responses:
+        '201':
+          description: New product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Missing required information, unable to create product
+          content:
+            application/json:
+              examples:
+                Missing required information, unable to create product:
+                  value: |-
+                    {
+                      "error": "Missing required information. Please provide all necessary data."
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                      "error": "An unexpected error occurred on the server. Please try again later."
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Product
+  /orders:
+    summary: Get all of the orders data.
+    description: >-
+      This path is used to retrieve all of the orders data from the orders.json
+      file.
+    get:
+      summary: Gets order data
+      description: ''
+      operationId: get_orders
+      responses:
+        '200':
+          description: Get all orders successful
+          content:
+            application/json:
+              examples:
+                orders:
+                  value: >-
+                    {"orders":[{"name":"Carey
+                    Maynard","id":"001","state":"pending"},{"name":"Angelo
+                    Ayala","id":"002","state":"canceled"},{"name":"Regina
+                    Yates","id":"003","state":"pending"},{"name":"Elliott
+                    Mcclure","id":"004","state":"pending"}]}
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+  /neworder:
+    summary: This path is used to add a new order to the orders.json file.
+    post:
+      summary: Post new order data
+      description: >-
+        The /neworder path uses a POST operation to add a new order to the
+        orders.json file.
+      operationId: post_order
+      requestBody:
+        description: A new order object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: Create a new orders successful
+          content:
+            application/json:
+              examples:
+                new_order:
+                  value:
+                    name: Valeria Carlson
+                    id: '005'
+                    state: pending
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+  /orders/{id}:
+    summary: ' Change the status of an order matching the provided.'
+    description: >-
+      This path is used to change the status of an order matching the provided
+      id. It modifies the state attribute of each order.
+    put:
+      summary: Update Order
+      description: >-
+        Uses a PUT operation to update the state of an order with a matching id
+        in the orders.json file.
+      operationId: update_order
+      parameters:
+        - name: id
+          in: path
+          description: The id of the order.
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Update successful
+          content:
+            application/json:
+              examples:
+                Update successful:
+                  value: Update successful
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          description: The unique identifier for the order.
+        order_date:
+          type: string
+          format: date
+          description: The date when the order was placed.
+        total_price:
+          type: number
+          format: double
+          description: The total price of the order.
+        customer_id:
+          type: integer
+          description: The ID of the customer who placed the order.
+        shipment_id:
+          type: integer
+          description: The ID of the shipment associated with the order.
+        payment_id:
+          type: integer
+          description: The ID of the payment associated with the order.
+      required:
+        - order_id
+        - order_date
+        - total_price
+        - customer_id
+        - shipment_id
+        - payment_id
+    Customer:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+          description: The unique identifier for the customer.
+        first_name:
+          type: string
+          description: The first name of the customer.
+        last_name:
+          type: string
+          description: The last name of the customer.
+        email:
+          type: string
+          format: email
+          description: The email address of the customer.
+        address:
+          type: string
+          description: The address of the customer.
+        phone_number:
+          type: string
+          description: The phone number of the customer.
+    Product:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          description: The unique identifier for the product.
+        product_name:
+          type: string
+          description: The name of the product.
+        sku:
+          type: string
+          description: The stock keeping unit (SKU) for the product.
+        description:
+          type: string
+          description: A description of the product.
+        inventory_level:
+          type: integer
+          description: The current inventory level of the product.
+        cost_price:
+          type: number
+          format: double
+          description: The cost price of the product.
+        retail_price:
+          type: number
+          format: double
+          description: The retail price of the product.
+        category_id:
+          type: integer
+          description: The category ID to which the product belongs.
+      required:
+        - product_id
+        - product_name
+        - sku
+        - description
+        - inventory_level
+        - cost_price
+        - retail_price
+        - category_id
+servers:
+  - url: https://localhost:5432
+    variables: {}
+    description: A local server for testing
