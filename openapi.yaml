@@ -169,6 +169,16 @@ paths:
                         "phone_number": "555-987-6543"
                       }
                     ]
+        '404':
+          description: Users not found
+          content:
+            application/json:
+              examples:
+                Users not found:
+                  value: |-
+                    {
+                     "error": "Users not found"
+                    }
         '500':
           description: There has been an error retrieving user data
           content:
@@ -210,6 +220,16 @@ paths:
                        "phone_number":"555-123-4567"
                       }
                     ]
+        '401':
+          description: Unauthorized request
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }
         '404':
           description: User not found
           content:
@@ -240,14 +260,14 @@ paths:
       operationId: updateUser
       responses:
         '200':
-          description: User
+          description: User sucessfully updated
           content:
             application/json:
               examples:
                 User information successfully updated:
                   value: |-
                     {
-                     "message": "Update Successful"
+                     "message": "User updated successfully"
                     }
         '401':
           description: Unauthorized request
@@ -299,11 +319,11 @@ paths:
             type: string
       responses:
         '201':
-          description: Successfully retrieved user data matching {id}
+          description: Successfully retrieved user data matching ID
           content:
             application/json:
               examples:
-                Successfully retrieved user data matching {id}:
+                Successfully retrieved user data matching ID:
                   value: |-
                     [
                      { "customer_id": 1,
@@ -321,9 +341,9 @@ paths:
               examples:
                 User not found:
                   value: |-
-                   {
-                     "error": "User ID not found"
-                    }
+                    {
+                      "error": "User ID not found"
+                     }
         '500':
           description: Internal server error
           content:
@@ -351,7 +371,7 @@ paths:
       operationId: deleteUserById
       responses:
         '204':
-          description: User account successfully deleted 
+          description: User account successfully deleted
           content:
             application/json:
               examples:
@@ -359,6 +379,16 @@ paths:
                   value: |-
                     {
                      "message": "User account successfully deleted"
+                    }
+        '401':
+          description: Unauthorised request
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                      "error": "Unauthorized request, please login and try again"
                     }
         '404':
           description: User with {userId} not found
@@ -390,17 +420,117 @@ paths:
       Get all products in a category can also be used with url queries to get
       more specific results
     get:
-      summary: Get all products by category
-      description: Retrieve a list of products filtered by category
+      summary: Get all products
+      description: Retrieve a list of all products
+      operationId: getProducts
+      responses:
+        '200':
+          description: All products retrieved successfully
+          content:
+            application/json:
+              examples:
+                All products retrieved successfully:
+                  value: |-
+                    [
+                     {
+                      "product_id": 12345,
+                      "product_name": "New Product 1",
+                      "sku": "NP123",
+                      "description": "This is a newly created product.",
+                      "inventory_level": 10,
+                      "cost_price": 1.0,
+                      "retail_price": 5.0,
+                      "category_id": 456
+                     },
+                     {
+                      "product_id": 1678,
+                      "product_name": "New Product 2",
+                      "sku": "NP678",
+                      "description": "This is a newly created product.",
+                      "inventory_level": 5,
+                      "cost_price": 1.0,
+                      "retail_price": 5.0,
+                      "category_id": 456
+                     }
+                    ]
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Product
+  /products/{categoryId}:
+    summary: Get all products in a category
+    description: Get all products filtered by category ID
+    get:
+      summary: Get all products in a category
+      description: Get all products filtered by category ID
+      operationId: getProductsByCategory
       parameters:
-        - name: category
-          in: query
-          description: The ID of the category to filter products by
+        - name: categoryId
+          in: path
+          description: The id of the product.
           required: true
           schema:
             type: integer
-      operationId: getProducts
       responses:
+        '200':
+          description: All product matching category retrieved
+          content:
+            application/json:
+              examples:
+                Products in category successfully retrieved:
+                  value: |-
+                    [
+                      {
+                       "product_id": 12345,
+                       "product_name": "New Product 1",
+                       "sku": "NP123",
+                       "description": "This is a newly created product.",
+                       "inventory_level": 10,
+                       "cost_price": 1.0,
+                       "retail_price": 5.0,
+                       "category_id": 456
+                      },
+                      {
+                       "product_id": 1678,
+                       "product_name": "New Product 2",
+                       "sku": "NP678",
+                       "description": "This is a newly created product.",
+                       "inventory_level": 5,
+                       "cost_price": 1.0,
+                       "retail_price": 5.0,
+                       "category_id": 456
+                      }
+                    ]
+        '404':
+          description: Category ID not found
+          content:
+            application/json:
+              examples:
+                Category not found:
+                  value: |-
+                    {
+                     "error": "Category ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
         default:
           description: Default error sample response
       tags:
@@ -420,6 +550,155 @@ paths:
           schema:
             type: integer
       responses:
+        '200':
+          description: Prodcut matching ID successfully retrieved
+          content:
+            application/json:
+              examples:
+                Product retrieved successfully:
+                  value: |-
+                    {
+                      "product_id": 0,
+                      "product_name": "string",
+                      "sku": "string",
+                      "description": "string",
+                      "inventory_level": 0,
+                      "cost_price": 0,
+                      "retail_price": 0,
+                      "category_id": 0
+                    }
+        '404':
+          description: Product ID not found
+          content:
+            application/json:
+              examples:
+                Product not found:
+                  value: |-
+                    {
+                     "error": "Product ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Product
+    put:
+      summary: Update product by ID
+      description: Update a product by its ID
+      operationId: updateProductById
+      parameters:
+        - name: productId
+          in: path
+          description: The id of the product.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Prodcut successfully updated
+          content:
+            application/json:
+              examples:
+                Product successfully updated:
+                  value: |-
+                    {
+                     "message": "Product updated successfully"
+                    }
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorised request:
+                  value: |
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Product with matching ID not found
+          content:
+            application/json:
+              examples:
+                Product ID not found:
+                  value: |-
+                    {
+                     "error": "Product ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |-
+                    {
+                     "error": "Internal server error, try again later"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Product
+    delete:
+      summary: Delete a product by ID
+      description: Delete a product by its ID
+      operationId: deleteByProductId
+      parameters:
+        - name: productId
+          in: path
+          description: The id of the product.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product susessfully deleted
+          content:
+            application/json:
+              examples:
+                Product successfully deleted:
+                  value: |-
+                    {
+                     "message": "Product successfully deleted"
+                    }
+        '401':
+          description: Unauthorized request
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                     "error": "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Product ID not found
+          content:
+            application/json:
+              examples:
+                Product not found:
+                  value: |-
+                    {
+                     "error": "Product ID not found"
+                    }
+        '500':
+          description: Server error
+          content:
+            application/json:
+              examples:
+                Server error, failed to delete product:
+                  value: |-
+                    {
+                     "error": "Internal server error, failed to delete product"
+                    }
         default:
           description: Default error sample response
       tags:
@@ -469,14 +748,14 @@ paths:
       tags:
         - Product
   /orders:
-    summary: Get all of the orders data.
+    summary: Get all order data.
     description: >-
-      This path is used to retrieve all of the orders data from the orders.json
-      file.
+      This path is used to retrieve all of the orders data from the order table
+      in the database.
     get:
-      summary: Gets order data
+      summary: Gets all order data
       description: ''
-      operationId: get_orders
+      operationId: getOrders
       responses:
         '200':
           description: Get all orders successful
@@ -484,24 +763,242 @@ paths:
             application/json:
               examples:
                 orders:
-                  value: >-
-                    {"orders":[{"name":"Carey
-                    Maynard","id":"001","state":"pending"},{"name":"Angelo
-                    Ayala","id":"002","state":"canceled"},{"name":"Regina
-                    Yates","id":"003","state":"pending"},{"name":"Elliott
-                    Mcclure","id":"004","state":"pending"}]}
+                  value: |-
+                    [
+                      {
+                        "order_id": 1,
+                        "order_date": "2024-02-20",
+                        "total_price": 50.99,
+                        "customer_id": 101,
+                        "shipment_id": 201,
+                        "payment_id": 301
+                      },
+                      {
+                        "order_id": 2,
+                        "order_date": "2024-02-21",
+                        "total_price": 75.50,
+                        "customer_id": 102,
+                        "shipment_id": 202,
+                        "payment_id": 302
+                      }
+                    ]
+        '401':
+          description: Unauthorized request, please login and try agin.
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                      "error": "An unexpected error occurred on the server. Please try again later."
+                    }            
         default:
           description: Default error sample response
       tags:
         - Order
-  /neworder:
-    summary: This path is used to add a new order to the orders.json file.
+  /orders/{orderId}:
+    summary: ' Change the status of an order matching the provided.'
+    description: >-
+      This path is used to change the status of an order matching the provided
+      id.
+    get:
+      summary: Get a order by ID
+      description: Get a single order by ID
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          description: The id of the order.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order matching ID successfully retrieved
+          content:
+            application/json:
+              examples:
+                Order retrieved successfully:
+                  value: |-
+                    {
+                      "order_id": 1,
+                      "order_date": "2024-02-20",
+                      "total_price": 50.99,
+                      "customer_id": 101,
+                      "shipment_id": 201,
+                      "payment_id": 301
+                    }
+        '401':
+          description: Unauthorized request, please login and try agin.
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }                    
+        '404':
+          description: Order ID not found
+          content:
+            application/json:
+              examples:
+                Order not found:
+                  value: |-
+                    {
+                     "error": "Order ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+    put:
+      summary: Update Order
+      description: >-
+        Uses a PUT operation to update the state of an order with a matching id
+        in the order table within the database.
+      operationId: updateOrder
+      parameters:
+        - name: orderId
+          in: path
+          description: The id of the order.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prodcut successfully updated
+          content:
+            application/json:
+              examples:
+                Order successfully updated:
+                  value: |-
+                    {
+                     "message": "Order updated successfully"
+                    }
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorised request:
+                  value: |
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Order with matching ID not found
+          content:
+            application/json:
+              examples:
+                Order ID not found:
+                  value: |-
+                    {
+                     "error": "Order ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |-
+                    {
+                     "error": "Internal server error, try again later"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+  /my-account/orders:
+    summary: Retrieve orders associated with the currently logged in user
+    description: Retrieve orders associated with the currently logged in user
+    get:
+      summary: Get all orders associated with the currently logged in user
+      description: >-
+        Get all orders associated with the currently logged in user, using their
+        ID. The user ID is tracked / stored in the session auth token from the
+        moment the user logs in
+      operationId: getOrdersByUserId
+      responses:
+        '200':
+          description: Orders by user ID successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorised request:
+                  value: |
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: User ID not found
+          content:
+            application/json:
+              examples:
+                Order ID not found:
+                  value: |-
+                    {
+                     "error": "User ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |-
+                    {
+                     "error": "Internal server error, try again later"
+                    }      
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+        - Customer
+  /cart/{cartId}/checkout:
+    summary: This path is used to add a new order to the orders to the server.
     post:
       summary: Post new order data
       description: >-
         The /neworder path uses a POST operation to add a new order to the
         orders.json file.
       operationId: post_order
+      parameters:
+        - name: cartId
+          in: path
+          description: ID of the cart
+          required: true
+          schema:
+            type: string
       requestBody:
         description: A new order object
         content:
@@ -523,36 +1020,72 @@ paths:
           description: Default error sample response
       tags:
         - Order
-  /orders/{id}:
-    summary: ' Change the status of an order matching the provided.'
-    description: >-
-      This path is used to change the status of an order matching the provided
-      id. It modifies the state attribute of each order.
-    put:
-      summary: Update Order
-      description: >-
-        Uses a PUT operation to update the state of an order with a matching id
-        in the orders.json file.
-      operationId: update_order
+        - Checkout
+  /my-account/orders/{orderId}:
+    summary: Get a specific order associated to the currently logged in account
+    description: Allows a user to access a specific order associated to their account
+    get:
+      summary: Allows the user to access a specific order on their account
+      description: Allows the user to access a specific order on their account
+      operationId: customerGetOrderById
       parameters:
-        - name: id
+        - name: orderId
           in: path
           description: The id of the order.
           required: true
           schema:
             type: string
       responses:
-        '201':
-          description: Update successful
+        '200':
+          description: Order matching ID successfully retrieved
           content:
             application/json:
               examples:
-                Update successful:
-                  value: Update successful
+                Order retrieved successfully:
+                  value: |-
+                    {
+                      "order_id": 1,
+                      "order_date": "2024-02-20",
+                      "total_price": 50.99,
+                      "customer_id": 101,
+                      "shipment_id": 201,
+                      "payment_id": 301
+                    }
+        '401':
+          description: Unauthorized request, please login and try agin.
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }                    
+        '404':
+          description: Order ID not found
+          content:
+            application/json:
+              examples:
+                Order not found:
+                  value: |-
+                    {
+                     "error": "Order ID not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }      
         default:
           description: Default error sample response
       tags:
         - Order
+        - Customer
 components:
   schemas:
     Order:
