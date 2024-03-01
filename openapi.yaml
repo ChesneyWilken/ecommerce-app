@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: Ecommerce API
+  title: E-commerce API
   version: 1.0.0
   description: >-
-    A basic API for preforming CRUD operations relating to ecommerce orders,
+    A basic API for preforming CRUD operations relating to e-commerce orders,
     products and users
 paths:
   /sign-up:
@@ -145,7 +145,7 @@ paths:
       operationId: users
       responses:
         '201':
-          description: Successfully retreived all user data
+          description: Successfully retrieved all user data
           content:
             application/json:
               examples:
@@ -260,7 +260,7 @@ paths:
       operationId: updateUser
       responses:
         '200':
-          description: User sucessfully updated
+          description: User successfully updated
           content:
             application/json:
               examples:
@@ -381,7 +381,7 @@ paths:
                      "message": "User account successfully deleted"
                     }
         '401':
-          description: Unauthorised request
+          description: Unauthorized request
           content:
             application/json:
               examples:
@@ -551,7 +551,7 @@ paths:
             type: integer
       responses:
         '200':
-          description: Prodcut matching ID successfully retrieved
+          description: Product matching ID successfully retrieved
           content:
             application/json:
               examples:
@@ -604,7 +604,7 @@ paths:
             type: integer
       responses:
         '200':
-          description: Prodcut successfully updated
+          description: Product successfully updated
           content:
             application/json:
               examples:
@@ -618,7 +618,7 @@ paths:
           content:
             application/json:
               examples:
-                Unauthorised request:
+                Unauthorized request:
                   value: |
                     {
                       "error": "Unauthorized request, please login and try again"
@@ -660,7 +660,7 @@ paths:
             type: integer
       responses:
         '200':
-          description: Product susessfully deleted
+          description: Product successfully deleted
           content:
             application/json:
               examples:
@@ -887,7 +887,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Prodcut successfully updated
+          description: Product successfully updated
           content:
             application/json:
               examples:
@@ -901,7 +901,7 @@ paths:
           content:
             application/json:
               examples:
-                Unauthorised request:
+                Unauthorized request:
                   value: |
                     {
                       "error": "Unauthorized request, please login and try again"
@@ -954,7 +954,7 @@ paths:
           content:
             application/json:
               examples:
-                Unauthorised request:
+                Unauthorized request:
                   value: |
                     {
                       "error": "Unauthorized request, please login and try again"
@@ -984,43 +984,6 @@ paths:
       tags:
         - Order
         - Customer
-  /cart/{cartId}/checkout:
-    summary: This path is used to add a new order to the orders to the server.
-    post:
-      summary: Post new order data
-      description: >-
-        The /neworder path uses a POST operation to add a new order to the
-        orders.json file.
-      operationId: post_order
-      parameters:
-        - name: cartId
-          in: path
-          description: ID of the cart
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: A new order object
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Order'
-      responses:
-        '200':
-          description: Create a new orders successful
-          content:
-            application/json:
-              examples:
-                new_order:
-                  value:
-                    name: Valeria Carlson
-                    id: '005'
-                    state: pending
-        default:
-          description: Default error sample response
-      tags:
-        - Order
-        - Checkout
   /my-account/orders/{orderId}:
     summary: Get a specific order associated to the currently logged in account
     description: Allows a user to access a specific order associated to their account
@@ -1086,10 +1049,113 @@ paths:
       tags:
         - Order
         - Customer
+  /cart:
+    summary: Cart to keep track of items for purchase
+    get:
+      summary: Retrieve all cart items for the currently authenticated user.
+      description: >-
+        Retrieve the current state of the cart, including all products and
+        quantities.
+      operationId: getCart
+      responses:
+        '200':
+          description: Cart for currently authenticated user successfully retrieved
+          content:
+            application/json:
+              examples:
+                Cart retrieved successfully:
+                  value: '{}'
+        default:
+          description: Default error sample response
+      tags:
+        - Cart
+    delete:
+      summary: Clear the cart for the currently authenticated user, removing all items
+      description: ''
+      operationId: deleteCart
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - Cart
+  /cart/{productId}:
+    summary: Allows a product in the cart to be identified by it's ID
+    description: Update an existing product's quantity
+    parameters:
+      - name: productId
+        in: path
+        description: The id of the cart.
+        required: true
+        schema:
+          type: integer
+    put:
+      summary: >-
+        Retrieve details of a specific cart item for the currently authenticated
+        user.
+      description: ''
+      operationId: addOrUpdateProductInCart
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - Cart
+    delete:
+      summary: ' Remove a specific product from the cart.'
+      description: ''
+      operationId: deleteProductFromCart
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - Cart
+  /cart/{cartId}/checkout:
+    summary: This path is used to add a new order to the orders to the server.
+    post:
+      summary: Post new order data
+      description: >-
+        The /neworder path uses a POST operation to add a new order to the
+        orders.json file.
+      operationId: post_order
+      parameters:
+        - name: cartId
+          in: path
+          description: ID of the cart
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A new order object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: Create a new orders successful
+          content:
+            application/json:
+              examples:
+                new_order:
+                  value:
+                    name: Valeria Carlson
+                    id: '005'
+                    state: pending
+        default:
+          description: Default error sample response
+      tags:
+        - Order
+        - Checkout
 components:
   schemas:
     Order:
       type: object
+      required:
+        - order_id
+        - order_date
+        - total_price
+        - customer_id
+        - shipment_id
+        - payment_id
       properties:
         order_id:
           type: integer
@@ -1111,15 +1177,14 @@ components:
         payment_id:
           type: integer
           description: The ID of the payment associated with the order.
-      required:
-        - order_id
-        - order_date
-        - total_price
-        - customer_id
-        - shipment_id
-        - payment_id
     Customer:
       type: object
+      required:
+        - first_name
+        - last_name
+        - email
+        - address
+        - phone_number
       properties:
         customer_id:
           type: integer
@@ -1142,6 +1207,15 @@ components:
           description: The phone number of the customer.
     Product:
       type: object
+      required:
+        - product_id
+        - product_name
+        - sku
+        - description
+        - inventory_level
+        - cost_price
+        - retail_price
+        - category_id
       properties:
         product_id:
           type: integer
@@ -1169,15 +1243,44 @@ components:
         category_id:
           type: integer
           description: The category ID to which the product belongs.
+    Cart:
+      type: object
+      required:
+        - cart_id
+        - customer_id
+        - items
+      properties:
+        cart_id:
+          type: string
+          format: uuid
+          description: The unique identifier for the cart.
+        customer_id:
+          type: string
+          format: uuid
+          description: The unique identifier for the customer who owns the cart.
+        items:
+          type: array
+          description: An array of items in the cart.
+          items:
+            $ref: '#/components/schemas/CartItem'
+    CartItem:
+      type: object
       required:
         - product_id
-        - product_name
-        - sku
-        - description
-        - inventory_level
-        - cost_price
-        - retail_price
-        - category_id
+        - quantity
+        - price
+      properties:
+        product_id:
+          type: string
+          format: uuid
+          description: The unique identifier for the product.
+        quantity:
+          type: integer
+          description: The quantity of the product in the cart.
+        price:
+          type: number
+          format: double
+          description: The price of the product at the time it was added to the cart.
 servers:
   - url: https://localhost:5432
     variables: {}
