@@ -1054,17 +1054,60 @@ paths:
     get:
       summary: Retrieve all cart items for the currently authenticated user.
       description: >-
-        Retrieve the current state of the cart, including all products and
-        quantities.
+        Retrieve the current state of the cart, including all products and quantities. The cartId will be stored 
       operationId: getCart
       responses:
         '200':
           description: Cart for currently authenticated user successfully retrieved
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
               examples:
                 Cart retrieved successfully:
-                  value: '{}'
+                  value:
+                    cart_id: cartId
+                    customer_id: customerId
+                    items:
+                      - product_id: productId-1
+                        quantity: 2
+                        price: 12.99
+                        product_name: Product Name 1
+                      - product_id: productId-2
+                        quantity: 1
+                        price: 22.99
+                        product_name: Product Name 2
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                     "error": 
+                     "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Cart ID not found
+          content:
+            application/json:
+              examples:
+                Cart not found:
+                  value: |-
+                    {
+                     "error": "Cart not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
         default:
           description: Default error sample response
       tags:
@@ -1074,6 +1117,47 @@ paths:
       description: ''
       operationId: deleteCart
       responses:
+        '204':
+          description: Cart succsessfully deleted
+          content:
+            application/json:
+              examples:
+                Cart successfully cleared:
+                  value: |-
+                    {
+                     "message": "Cart cleared successfully"
+                    }
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                     "error": 
+                     "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Cart ID not found
+          content:
+            application/json:
+              examples:
+                Cart not found:
+                  value: |-
+                    {
+                     "error": "Cart not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
         default:
           description: Default error sample response
       tags:
@@ -1095,6 +1179,49 @@ paths:
       description: ''
       operationId: addOrUpdateProductInCart
       responses:
+        '200':
+          description: Product updated in cart successfully
+          content:
+            application/json:
+              examples:
+                Product updated in cart successfully:
+                  value:
+                    message: Product updated in cart successfully
+                    updatedItem:
+                      product_id: product-id-1
+                      quantity: 3
+                      price: 12.99
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                     "error": 
+                     "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Product ID not found
+          content:
+            application/json:
+              examples:
+                Product not found:
+                  value: |-
+                    {
+                     "error": "Product not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
         default:
           description: Default error sample response
       tags:
@@ -1104,6 +1231,47 @@ paths:
       description: ''
       operationId: deleteProductFromCart
       responses:
+        '204':
+          description: Product succsessfully deleted from cart
+          content:
+            application/json:
+              examples:
+                Product successfully deleted:
+                  value: |-
+                    {
+                     "message": "Product removed successfully"
+                    }
+        '401':
+          description: Unauthorized request, please login and try again
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                     "error": 
+                     "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Product ID not found
+          content:
+            application/json:
+              examples:
+                Product not found:
+                  value: |-
+                    {
+                     "error": "Product not found"
+                    }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |
+                    {
+                     "error": "Internal server error, try again later"
+                    }
         default:
           description: Default error sample response
       tags:
