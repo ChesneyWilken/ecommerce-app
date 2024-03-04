@@ -770,16 +770,14 @@ paths:
                         "order_date": "2024-02-20",
                         "total_price": 50.99,
                         "customer_id": 101,
-                        "shipment_id": 201,
-                        "payment_id": 301
+                        "payment_id": "7685b6b7-519a-60f6-ad4e-da26e746bcaa"
                       },
                       {
                         "order_id": 2,
                         "order_date": "2024-02-21",
                         "total_price": 75.50,
                         "customer_id": 102,
-                        "shipment_id": 202,
-                        "payment_id": 302
+                        "payment_id": "5325b6b7-419a-40f6-ad4e-da26e988bcba"
                       }
                     ]
         '401':
@@ -1054,7 +1052,8 @@ paths:
     get:
       summary: Retrieve all cart items for the currently authenticated user.
       description: >-
-        Retrieve the current state of the cart, including all products and quantities. The cartId will be stored 
+        Retrieve the current state of the cart, including all products and
+        quantities. The cartId will be stored 
       operationId: getCart
       responses:
         '200':
@@ -1280,8 +1279,7 @@ paths:
     summary: This path is used to add a new order to the orders to the server.
     post:
       summary: Post new order data
-      description: >-
-        The path used to add a new order to the database.
+      description: The path used to add a new order to the database.
       operationId: post_order
       parameters:
         - name: cartId
@@ -1301,34 +1299,80 @@ paths:
                 summary: Example request for checkout.
                 value:
                   paymentInfo:
-                    method: "credit_card"
+                    method: credit_card
                     details:
-                      cardNumber: "xxxx xxxx xxxx xxxx"
-                      expiryDate: "MM/YYYY"
-                      cvv: "xxx"
+                      cardNumber: xxxx xxxx xxxx xxxx
+                      expiryDate: MM/YYYY
+                      cvv: xxx
                   billingAddress:
-                    street: "1234 Main St"
-                    city: "Anytown"
-                    state: "Anystate"
-                    zipCode: "12345"
-                    country: "Country"
+                    street: 1234 Main St
+                    city: Anytown
+                    state: Anystate
+                    zipCode: '12345'
+                    country: Country
                   shippingInfo:
-                    street: "1234 Main St"
-                    city: "Anytown"
-                    state: "Anystate"
-                    zipCode: "12345"
-                    country: "Country"
+                    street: 1234 Main St
+                    city: Anytown
+                    state: Anystate
+                    zipCode: '12345'
+                    country: Country
                   contactInfo:
-                    email: "email@example.com"
-                    phone: "123-456-7890"
-                  discountCode: "DISCOUNT20"
+                    email: email@example.com
+                    phone: 123-456-7890
+                  discountCode: DISCOUNT20
       responses:
         '200':
-          description: Create a new orders successful
+          description: New order created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
+              example:
+                order_id: 674832
+                order_date: '2024-02-20'
+                total_price: 50.99
+                customer_id: 86857453
+                payment_id: 5325b6b7-419a-40f6-ad4e-da26e988bcba
+        '400':
+          description: Bad request, check input and try again.
+          content:
+            application/json:
+              examples:
+                Bad Request,:
+                  value: |-
+                    {
+                     "error": "Bad request. Invalid input parameters, please check and try again."
+                    }
+        '401':
+          description: Unauthorized client, login and try again.
+          content:
+            application/json:
+              examples:
+                Unauthorized request:
+                  value: |-
+                    {
+                      "error": "Unauthorized request, please login and try again"
+                    }
+        '404':
+          description: Cart ID not found.
+          content:
+            application/json:
+              examples:
+                Cart ID not found:
+                  value: |-
+                    {
+                     "error": "Cart ID not found."
+                    }
+        '500':
+          description: Internal server error, please try again later. 
+          content:
+            application/json:
+              examples:
+                Internal server error:
+                  value: |-
+                    {
+                     "error": "Internal server error, try again later"
+                    }
         default:
           description: Default error sample response
       tags:
@@ -1343,7 +1387,6 @@ components:
         - order_date
         - total_price
         - customer_id
-        - shipment_id
         - payment_id
       properties:
         order_id:
@@ -1360,11 +1403,9 @@ components:
         customer_id:
           type: integer
           description: The ID of the customer who placed the order.
-        shipment_id:
-          type: integer
-          description: The ID of the shipment associated with the order.
         payment_id:
-          type: integer
+          type: string
+          format: uuid
           description: The ID of the payment associated with the order.
     Customer:
       type: object
@@ -1456,7 +1497,7 @@ components:
         address:
           type: string
           description: customers address
-          example: "123 Main St, Anytown, USA"
+          example: 123 Main St, Anytown, USA
     CartItem:
       type: object
       required:
@@ -1472,7 +1513,7 @@ components:
         sku:
           type: string
           description: The SKU of the product
-          example: "546312_XS"
+          example: 546312_XS
         quantity:
           type: integer
           description: The quantity of the product in the cart.
@@ -1481,7 +1522,7 @@ components:
           type: number
           format: double
           description: The price of the product at the time it was added to the cart.
-          example: 12.50
+          example: 12.5
     CheckoutRequest:
       type: object
       description: Request body for initiating the checkout process.
