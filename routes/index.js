@@ -4,6 +4,8 @@ const router = express.Router();
 const {Pool, Client} = require('pg');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
@@ -24,6 +26,59 @@ app.use(
     saveUninitialized: false
   })
 );
+
+// Middleware for passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy((email, password, done) => {
+  (async ()=> {
+    try {
+      const {rows} = await pool.query('SELECT * FROM ecoms.customer WHERE email = $1', [email]);
+      const user = rows[0];
+      const password = user.password;
+
+      if (!user) {
+        return done(null, false, { message: 'Incorrect email or password.' });
+      }
+
+      if(user.password !== password) {
+        return done(null, false, { message: 'Incorrect email or password.' });
+      }
+
+      return done(null, user);
+      
+    } catch (err) {
+      return done(err);
+    }
+  })
+}
+
+));
+
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const {rows} = await pool.query('SELECT id, email, first_name, last_name FROM ecoms.customer WHERE id = $1', [id]);
+    const userObject = rows[0];
+
+    // Check if the user exists
+    if(rows.length > 0) {
+      // Return the user
+      done(null, userObject);
+    } else {
+      done(null, false)
+    }
+
+  } catch (err) {
+    done(err);
+  }
+})
+
 
 //Get Index
 
