@@ -1118,7 +1118,7 @@ paths:
       operationId: deleteCart
       responses:
         '204':
-          description: Cart succsessfully deleted
+          description: Cart successfully deleted
           content:
             application/json:
               examples:
@@ -1168,7 +1168,7 @@ paths:
     parameters:
       - name: productId
         in: path
-        description: The id of the cart.
+        description: The productId for item to be added / removed / updated.
         required: true
         schema:
           type: integer
@@ -1232,7 +1232,7 @@ paths:
       operationId: deleteProductFromCart
       responses:
         '204':
-          description: Product succsessfully deleted from cart
+          description: Product successfully deleted from cart
           content:
             application/json:
               examples:
@@ -1281,8 +1281,7 @@ paths:
     post:
       summary: Post new order data
       description: >-
-        The /neworder path uses a POST operation to add a new order to the
-        orders.json file.
+        The path used to add a new order to the database.
       operationId: post_order
       parameters:
         - name: cartId
@@ -1292,22 +1291,44 @@ paths:
           schema:
             type: string
       requestBody:
-        description: A new order object
+        description: The cart object including cart items
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Order'
+              $ref: '#/components/schemas/CheckoutRequest'
+            examples:
+              checkoutExample:
+                summary: Example request for checkout.
+                value:
+                  paymentInfo:
+                    method: "credit_card"
+                    details:
+                      cardNumber: "xxxx xxxx xxxx xxxx"
+                      expiryDate: "MM/YYYY"
+                      cvv: "xxx"
+                  billingAddress:
+                    street: "1234 Main St"
+                    city: "Anytown"
+                    state: "Anystate"
+                    zipCode: "12345"
+                    country: "Country"
+                  shippingInfo:
+                    street: "1234 Main St"
+                    city: "Anytown"
+                    state: "Anystate"
+                    zipCode: "12345"
+                    country: "Country"
+                  contactInfo:
+                    email: "email@example.com"
+                    phone: "123-456-7890"
+                  discountCode: "DISCOUNT20"
       responses:
         '200':
           description: Create a new orders successful
           content:
             application/json:
-              examples:
-                new_order:
-                  value:
-                    name: Valeria Carlson
-                    id: '005'
-                    state: pending
+              schema:
+                $ref: '#/components/schemas/Order'
         default:
           description: Default error sample response
       tags:
@@ -1417,38 +1438,139 @@ components:
         - cart_id
         - customer_id
         - items
+        - address
       properties:
         cart_id:
-          type: string
-          format: uuid
+          type: integer
           description: The unique identifier for the cart.
+          example: 65308
         customer_id:
-          type: string
-          format: uuid
+          type: integer
           description: The unique identifier for the customer who owns the cart.
+          example: 2436
         items:
           type: array
           description: An array of items in the cart.
           items:
             $ref: '#/components/schemas/CartItem'
+        address:
+          type: string
+          description: customers address
+          example: "123 Main St, Anytown, USA"
     CartItem:
       type: object
       required:
         - product_id
+        - sku
         - quantity
         - price
       properties:
         product_id:
-          type: string
-          format: uuid
+          type: integer
           description: The unique identifier for the product.
+          example: 89573
+        sku:
+          type: string
+          description: The SKU of the product
+          example: "546312_XS"
         quantity:
           type: integer
           description: The quantity of the product in the cart.
+          example: 2
         price:
           type: number
           format: double
           description: The price of the product at the time it was added to the cart.
+          example: 12.50
+    CheckoutRequest:
+      type: object
+      description: Request body for initiating the checkout process.
+      required:
+        - paymentInfo
+        - billingAddress
+        - contactInfo
+      properties:
+        paymentInfo:
+          type: object
+          description: Payment information for processing the transaction.
+          required:
+            - method
+            - details
+          properties:
+            method:
+              type: string
+              description: Payment method (e.g., credit_card, paypal).
+            details:
+              type: object
+              description: Detailed payment information, varies by method.
+              required:
+                - cardNumber
+                - expiryDate
+                - cvv
+              properties:
+                cardNumber:
+                  type: string
+                  description: Credit card number.
+                expiryDate:
+                  type: string
+                  description: Expiry date of the credit card (MM/YYYY).
+                cvv:
+                  type: string
+                  description: CVV of the credit card.
+        billingAddress:
+          type: object
+          description: Billing address for the payment.
+          required:
+            - street
+            - city
+            - state
+            - zipCode
+            - country
+          properties:
+            street:
+              type: string
+              description: Street address.
+            city:
+              type: string
+              description: City.
+            state:
+              type: string
+              description: State or province.
+            zipCode:
+              type: string
+              description: Postal or zip code.
+            country:
+              type: string
+              description: Country.
+        shippingInfo:
+          type: object
+          description: Shipping information for order delivery (optional).
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            zipCode:
+              type: string
+            country:
+              type: string
+        contactInfo:
+          type: object
+          description: Contact information for order confirmation and updates.
+          required:
+            - email
+          properties:
+            email:
+              type: string
+              description: Email address for order confirmation.
+            phone:
+              type: string
+              description: Phone number for updates (optional).
+        discountCode:
+          type: string
+          description: Promo code for discounts (optional).
 servers:
   - url: https://localhost:5432
     variables: {}
