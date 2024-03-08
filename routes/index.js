@@ -6,6 +6,7 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
@@ -42,12 +43,15 @@ passport.use(new LocalStrategy((email, password, done) => {
         return done(null, false, { message: 'Incorrect email or password.' });
       }
 
-      if(user.password !== password) {
+      // Use bcrypt to compare passwords
+       const isMatch = await bcrypt.compare(password, user.password);
+
+      if(!isMatch) {
         return done(null, false, { message: 'Incorrect email or password.' });
+      } else {
+        return done(null, user);
       }
 
-      return done(null, user);
-      
     } catch (err) {
       return done(err);
     }
@@ -79,6 +83,19 @@ passport.deserializeUser(async (id, done) => {
   }
 })
 
+// Bcrypt password function
+const hashPassword = async (password, saltRounds) => {
+  try {
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hash = await bcrypt.hash(password, salt);
+    return hash;
+
+  } catch (err) {
+    console.log(err);
+  }
+
+  return null;  
+}
 
 //Get Index
 
@@ -100,16 +117,19 @@ router.post('/sign-up', async (req, res) => {
       return res.status(400).json({error: 'A user with this email already exists. Please login.'});
     }
 
+    // Hash the password
+    const hashed = await hashPassword(password, 10);
+    if(!hashed) {
+      return res.status(500).json('An error occurred while trying to hash the password, please try again.');
+    }
+
     const newUser = await db.query(
       'INSERT INTO customers (first_name, last_name, email, password, phone_number) VALUES (($1, $2, $3, $4, $5) RETURNING *',
-      [first_name, last_name, email, password, phone_number]
+      [first_name, last_name, email, hashed, phone_number]
     );
 
-    res.status(201).json({ message: 'Account successfully created', user: newUser.rows[0] });
-
-    //Redirect to login
-    res.redirect('/login');
-
+    //Account created successfully. Redirect to login
+    res.status(201).json({ message: 'Account successfully created'});
 
   } catch (err) {
     console.error(err.message);
@@ -212,5 +232,3 @@ router.put('/users/my-account', async (req, res) => {
 
 
 module.exports = router;
-
-
