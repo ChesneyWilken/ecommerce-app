@@ -11,14 +11,14 @@ app.use(express.json());
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
 // Create a new pool using the parsed database connection configuration
-const pool = new Pool(dbConfig);
+const db = new Pool(dbConfig);
 
 
 
 // test to check if the database is connected
 (async () => {
 
-  const client = await pool.connect();
+  const client = await db.connect();
 
   try {
     const { rows } = await client.query('SELECT current_user');
