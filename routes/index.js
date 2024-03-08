@@ -10,13 +10,13 @@ const LocalStrategy = require('passport-local').Strategy;
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
 // Create a new pool using the parsed database connection configuration
-const pool = new Pool(dbConfig);
+const db = new Pool(dbConfig);
 
 // Middleware for session authentication
 app.use(
   session({
     store: new pgSession({
-      pool: pool, // connection pool
+      pool: db, // connection database pool
       tableName: "user_sessions", // session table name
       schemaName: "ecoms" //custom schema name
     }),
@@ -34,7 +34,7 @@ app.use(passport.session());
 passport.use(new LocalStrategy((email, password, done) => {
   (async ()=> {
     try {
-      const {rows} = await pool.query('SELECT * FROM ecoms.customer WHERE email = $1', [email]);
+      const {rows} = await db.query('SELECT * FROM ecoms.customer WHERE email = $1', [email]);
       const user = rows[0];
       const password = user.password;
 
@@ -63,7 +63,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const {rows} = await pool.query('SELECT id, email, first_name, last_name FROM ecoms.customer WHERE id = $1', [id]);
+    const {rows} = await db.query('SELECT id, email, first_name, last_name FROM ecoms.customer WHERE id = $1', [id]);
     const userObject = rows[0];
 
     // Check if the user exists
@@ -94,13 +94,13 @@ router.post('/sign-up', async (req, res) => {
   //Insert new customer information into the database
   try {
     // Check if the user already exists
-    const existingUser = await pool.query('SELECT * FROM ecoms.customers WHERE email = $1', [email]);
+    const existingUser = await db.query('SELECT * FROM ecoms.customers WHERE email = $1', [email]);
 
     if(existingUser.rows.length > 0) {
       return res.status(400).json({error: 'A user with this email already exists. Please login.'});
     }
 
-    const newUser = await pool.query(
+    const newUser = await db.query(
       'INSERT INTO customers (first_name, last_name, email, password, phone_number) VALUES (($1, $2, $3, $4, $5) RETURNING *',
       [first_name, last_name, email, password, phone_number]
     );
@@ -119,54 +119,22 @@ router.post('/sign-up', async (req, res) => {
 
 
 // Existing user login
-router.post('/login', async (req, res) => {
-  const {email, password} = req.body;
-
-  try{
-    // Get user information
-    const existingUser = await pool.query('SELECT * FROM ecoms.customer WHERE email = $1', [email]);
-
-    // If the user doesn't exist respond with an error
-    const user = existingUser.rows[0];
-    if(user.email !== email) {
-      return res.status(400).json({error: 'User does not exist. Please create an account.'});
+router.post('/login', 
+  passport.authenticate('local',
+    { failureRedirect: '/login', 
+      successRedirect: '/users/my-account'
     }
-
-    // Check if the password is correct
-     if (user.password !== password) {
-      return res.status(400).json({error: 'Incorrect password, please try again.'});
-     }
-
-     // If the password is correct respond with a success message
-     if(user.password === password) {
-      // Attach an authenticated property to the session
-      req.session.authenticated = true;
-      // Attach the user object to the session
-      req.session.user = {
-        id: user.id,
-        first_name: user.first_name,
-        last_name: user.last_name
-      }
-
-      res.status(201).json({ message: 'Login successful'});
-      res.redirect('./users/my-account');
-     }
-
-    
-  } catch (err) {
-    console.error('There has been an error:', err.message);
-    res.status(500).json({error:'An error occurred while logging in'});
-  }
-});
+  )
+);
 
 // User endpoints
 
-// Get all users. This should be restricted maybe a middleware function that checks if the user has the correct permissions. Adding this is currently our of the scope of this project.
+// Get all users. This should be restricted maybe a middleware function that checks if the user has admin permissions the correct permissions. Adding this is out of the scope of this project.
 
 router.get('/users', async (req, res) => {
   
   try {
-    const allUsers = await pool.query('SELECT customer_id, first_name, last_name, email, address, phone_number FROM ecoms.customer');
+    const allUsers = await db.query('SELECT customer_id, first_name, last_name, email, address, phone_number FROM ecoms.customer');
     res.status(200).json(allUsers.rows);
 
   } catch (err) {
@@ -186,7 +154,7 @@ router.get('/users/my-account', async (req, res) => {
 
     // Get the user information
     const userId = req.session.user.id;
-    const user = await pool.query('SELECT * FROM ecoms.customer WHERE id = $1', [userId]);
+    const user = await db.query('SELECT * FROM ecoms.customer WHERE id = $1', [userId]);
 
     // Check if the user exists
     if(user.rows.length === 0) {
@@ -220,7 +188,7 @@ router.put('/users/my-account', async (req, res) => {
     const {first_name, last_name, email, password, phone_number} = req.body;
 
     // Check if the user exists
-    const existingUser = await pool.query('SELECT * FROM ecoms.customer WHERE id = $1', [userId]);
+    const existingUser = await db.query('SELECT * FROM ecoms.customer WHERE id = $1', [userId]);
 
     if(existingUser.rows.length === 0) {
       return res.status(404).json({error: 'User not found'});
@@ -232,7 +200,7 @@ router.put('/users/my-account', async (req, res) => {
       SET first_name = $1, last_name = $2, email = $3, password = $4, phone_number = $5 
       WHERE id = $6
       RETURNING *`;  
-    const updatedUser = await pool.query(updateUserQuery, [first_name, last_name, email, password, phone_number, userId]);
+    const updatedUser = await db.query(updateUserQuery, [first_name, last_name, email, password, phone_number, userId]);
     res.status(200).send('User successfully updated');
 
   } catch(err) {
