@@ -29,8 +29,8 @@ paths:
                   value: |-
                     {
                       "message": "Account successfully created",
-                      "user": {
-                        "id": 123,
+                      "user":
+                      {
                         "first_name": "John",
                         "last_name": "Doe",
                         "email": "john@example.com",
@@ -307,13 +307,13 @@ paths:
     summary: Get specific user by their ID
     description: Get specific user by their ID
     get:
-      summary: Get a specific user by their ID
+      summary: use a get request to  retrieve a specific user by their ID
       description: ''
       operationId: getUserById
       parameters:
         - name: userId
           in: path
-          description: The id of the order.
+          description: The id of the customer.
           required: true
           schema:
             type: string
@@ -342,7 +342,7 @@ paths:
                 User not found:
                   value: |-
                     {
-                      "error": "User ID not found"
+                      "error": "No customer found with that ID"
                      }
         '500':
           description: Internal server error
@@ -352,7 +352,7 @@ paths:
                 Internal server error:
                   value: |-
                     {
-                     "error": "User ID not found"
+                     "error": "Internal server error, please try again later"
                     }
         default:
           description: Default error sample response
