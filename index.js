@@ -5,100 +5,25 @@ const {Pool, Client} = require('pg');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const bcrypt = require('bcrypt');
+const {sessionAuthentication, setupPassport, hashPassword} = require('./middleware/authentication');
+
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
 // Create a new pool using the parsed database connection configuration
 const db = new Pool(dbConfig);
 
-// Middleware for session authentication
-app.use(
-  session({
-    store: new pgSession({
-      pool: db, // connection database pool
-      tableName: "user_sessions", // session table name
-      schemaName: "ecoms" //custom schema name
-    }),
-    secret: process.env.SESSION_SECRET,
-    cookie: { maxAge: 1000 * 60 * 60 * 24, secure: true, sameSite: 'none' },
-    resave: false,
-    saveUninitialized: false
-  })
-);
+//Use session authentication middleware
+app.use(sessionAuthentication(db));
 
-// Middleware for passport
+//Configure passport
+setupPassport(db);
+
+//Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(new LocalStrategy((email, password, done) => {
-  (async ()=> {
-    try {
-      const {rows} = await db.query('SELECT * FROM ecoms.customer WHERE email = $1', [email]);
-      const user = rows[0];
-      const password = user.password;
-
-      if (!user) {
-        return done(null, false, { message: 'Incorrect email or password.' });
-      }
-
-      // Use bcrypt to compare passwords
-       const isMatch = await bcrypt.compare(password, user.password);
-
-      if(!isMatch) {
-        return done(null, false, { message: 'Incorrect email or password.' });
-      } else {
-        return done(null, user);
-      }
-
-    } catch (err) {
-      return done(err);
-    }
-  })
-}
-
-));
-
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const {rows} = await db.query('SELECT id, email, first_name, last_name FROM ecoms.customer WHERE id = $1', [id]);
-    const userObject = rows[0];
-
-    // Check if the user exists
-    if(rows.length > 0) {
-      // Return the user
-      done(null, userObject);
-    } else {
-      done(null, false)
-    }
-
-  } catch (err) {
-    done(err);
-  }
-})
-
-// Bcrypt password function
-const hashPassword = async (password, saltRounds) => {
-  try {
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hash = await bcrypt.hash(password, salt);
-    return hash;
-
-  } catch (err) {
-    console.log(err);
-  }
-
-  return null;  
-}
-
 //Get Index
-
 router.get('/', (req, res) => {
   res.send('Index')
 });
@@ -139,8 +64,7 @@ router.post('/sign-up', async (req, res) => {
 
 
 // Existing user login
-router.post('/login', 
-  passport.authenticate('local',
+router.post('/login',passport.authenticate('local',
     { failureRedirect: '/login', 
       successRedirect: '/users/my-account'
     }
