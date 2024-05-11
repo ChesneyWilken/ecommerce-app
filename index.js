@@ -6,12 +6,16 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const passport = require('passport');
 const {sessionAuthentication, setupPassport, hashPassword} = require('./middleware/authentication');
+const helmet = require('helmet');
 
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
 
 // Create a new pool using the parsed database connection configuration
 const db = new Pool(dbConfig);
+
+//Use helmet to secure http headers
+app.use(helmet());
 
 //Use session authentication middleware
 app.use(sessionAuthentication(db));

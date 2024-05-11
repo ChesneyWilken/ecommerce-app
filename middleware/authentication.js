@@ -11,7 +11,12 @@ function sessionAuthentication(db){
       schemaName: "ecoms" //custom schema name
     }),
     secret: process.env.SESSION_SECRET,
-    cookie: { maxAge: 1000 * 60 * 60 * 24, secure: true, sameSite: 'none' },
+    cookie: { 
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+      secure: true,
+      sameSite: 'none'
+      },
     resave: false,
     saveUninitialized: false
   })
