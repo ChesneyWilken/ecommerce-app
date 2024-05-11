@@ -7,6 +7,7 @@ const pgSession = require('connect-pg-simple')(session);
 const passport = require('passport');
 const {sessionAuthentication, setupPassport, hashPassword} = require('./middleware/authentication');
 const helmet = require('helmet');
+const { check, validationResult } = require('express-validator');
 
 // Parse the DATABASE_CONNECTION environment variable as a JSON object
 const dbConfig = JSON.parse(process.env.DATABASE_CONNECTION);
@@ -34,7 +35,14 @@ router.get('/', (req, res) => {
 
 
 // New user sign up
-router.post('/sign-up', async (req, res) => {
+router.post('/sign-up', [
+  check('email').notEmpty().isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+  check('password').notEmpty().isLength({min: 8}.withMessage('Please enter a password with at least 8 characters')),
+  check('first_name').notEmpty().escape(),
+  check('last_name').notEmpty().escape(),
+  check('phone_number').notEmpty().isMobilePhone('any', {strictMode: false}).withMessage('Please enter a valid phone number').escape(),
+  ],
+  async (req, res) => {
   const {first_name, last_name, email, password, phone_number} = req.body;
 
   //Insert new customer information into the database
@@ -68,11 +76,22 @@ router.post('/sign-up', async (req, res) => {
 
 
 // Existing user login
-router.post('/login',passport.authenticate('local',
-    { failureRedirect: '/login', 
-      successRedirect: '/users/my-account'
+router.post('/login',[
+  check('email').notEmpty().isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+  check('password').notEmpty().isLength({min: 8}.withMessage('Please enter a password with at least 8 characters')),
+  ], (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+      return res.status(400).redirect('/login', {
+        errors: errors.array()
+      });
     }
-  )
+    next();
+  },
+  passport.authenticate('local', {
+    failureRedirect: '/login', 
+    successRedirect: '/users/my-account'
+  }) 
 );
 
 // User endpoints
